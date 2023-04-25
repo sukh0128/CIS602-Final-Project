@@ -15,20 +15,17 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = 'I_hate_secret_keys'
 
-# Load the labels
+# Load the labels provided from TensorFlow Hub into a variable
 with open("ImageNetLabels.txt", "r") as f:
     labels = [line.strip() for line in f.readlines()]
 
 # Load the model from the local folder
 model_path = "mobilenet_v2"
-# model = tf.keras.models.load_model(model_path)
 model = tf.keras.Sequential([
     hub.KerasLayer(model_path)
 ])
-print(f"Model type: {type(model)}")
 
-
-
+# The class mapped to the index.html for uploading an image
 class UploadForm(FlaskForm):
     image = FileField('Upload an image (JPG format)', validators=[
         FileRequired(),
@@ -40,16 +37,20 @@ class UploadForm(FlaskForm):
 def index():
     form = UploadForm()
     if form.validate_on_submit():
+        # Use Image class from PIL library to open the image in a stream and converts it to an RGB format
         image = form.image.data
         img = Image.open(image.stream).convert('RGB')
         
-        # Preprocess the image
+        # Preprocess the image by resizing the data to the 224, 224 requirement
         img = img.resize((224, 224))
+        # Then normalize the numpy array
         img_array = np.array(img) / 255.0
+        # Add an extra dimension to the array so that it is a batch now 
         img_batch = np.expand_dims(img_array, axis=0)
 
         # Make a prediction
         predictions = model.predict(img_batch)
+        # Get the highest probable index of the prediction result
         predicted_class = np.argmax(predictions[0])
 
         # Get the label at the predicted class index
