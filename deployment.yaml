@@ -23,10 +23,10 @@ kind: Service
 metadata:
   name: image-classifier
 spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30080
   selector:
     app: image-classifier
-  ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
-  type: LoadBalancer

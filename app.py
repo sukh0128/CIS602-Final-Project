@@ -19,11 +19,13 @@ app.secret_key = 'I_hate_secret_keys'
 with open("ImageNetLabels.txt", "r") as f:
     labels = [line.strip() for line in f.readlines()]
 
-# Load the model from the local folder
-model_path = "mobilenet_v2"
-model = tf.keras.Sequential([
-    hub.KerasLayer(model_path)
-])
+input_layer = tf.keras.layers.Input(shape=[224, 224, 3])
+
+# Use the KerasLayer directly
+hub_layer = hub.KerasLayer("https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/4", trainable=False)
+output_layer = hub_layer(input_layer)
+
+model = tf.keras.Model(inputs=input_layer, outputs=output_layer)
 
 # The class mapped to the index.html for uploading an image
 class UploadForm(FlaskForm):
